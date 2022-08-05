@@ -45,6 +45,11 @@ function randInt(){
 let catArray = []
 
 function buildCategories(){
+
+    if(!(document.getElementById('category-row').firstChild.innerText == '')){
+        resetBoard()
+    }
+
     const fetchReq1 = fetch(
         `https://jservice.io/api/category?&id=${randInt()}`
     ).then(res => res.json());
@@ -76,7 +81,22 @@ function buildCategories(){
         catArray = res
         setCategories(catArray)
     })
+}
 
+//reset board and $$ amount if nedded
+function resetBoard(){
+    let clueParent = document.getElementById('clue-board')
+    while(clueParent.firstChild){
+        clueParent.removeChild(clueParent.firstChild)
+    }
+
+    let catParent = document.getElementById('category-row')
+    while(catParent.firstChild){
+        catParent.removeChild(catParent.firstChild)
+    }
+    document.getElementById('score').innerText = 0
+    initBoard()
+    initCatRow()
 }
 
 //generate/load categories to the board
@@ -99,5 +119,41 @@ function getClue(event) {
     let clue = cluesList.find(obj => {
         return obj.value == boxValue
     })
+    console.log(clue)
     showQuestion(clue, child, boxValue)
 }
+
+//show question to user and get their answer
+function showQuestion(clue, target, boxValue){
+    let userAnswer = prompt(clue.question).toLowerCase()
+    let correctAnswer = clue.answer.toLowerCase().replace(/<\/?[^>]+(>|$)/g, "")
+    let possiblePoints = +(boxValue)
+    target.innerHTML = clue.answer
+    target.removeEventListener('click', getClue, false)
+    evaluateAnswer(userAnswer, correctAnswer, possiblePoints)
+}
+
+//evaluate answer ans show to user to confirm
+function evaluateAnswer(userAnswer, correctAnswer, possiblePoints) {
+    let checkAnswer = (userAnswer == correctAnswer) ? 'correct' : 'incorrect'
+    let confirmAnswer = 
+    confirm(`For ${possiblePoints}, you answered "${userAnswer}", and the correct answer was "${correctAnswer}". Your answer appears to be ${checkAnswer}. Click OK to accept or CANCEL if the answer was not properly evaluated.`)
+    awardPoints(checkAnswer, confirmAnswer, possiblePoints)
+}
+
+//award points
+function awardPoints(checkAnswer, confirmAnswer, possiblePoints) {
+    if(!(checkAnswer == 'incorrect' && confirmAnswer == true)){
+        let target = document.getElementById('score')
+        let currentScore = +(target.innerText)
+        currentScore += possiblePoints
+        target.innerText = currentScore
+    } else {
+        alert(`No points awarded.`)
+    }
+}
+
+
+
+
+
